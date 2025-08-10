@@ -195,40 +195,34 @@ public class MainActivity extends Activity {
         final NDCrashUnwinder unwinder = NDCrashUnwinder.values()[prefs.getInt(MainApplication.UNWINDER_FOR_NEXT_LAUNCH_KEY, 0)];
         NDCrashError error;
         String message = null;
-        switch (item.getItemId()) {
-            case R.id.menu_in_initialize_signal_handler:
-                error = NDCrash.initializeInProcess(
-                        MainApplication.getReportPath(),
-                        unwinder);
-                message = "In-process initialization result: " + error;
-                break;
-            case R.id.menu_in_deinitialize_signal_handler:
-                message = "Out-of-process de-initialization result: " + NDCrash.deInitializeInProcess();
-                break;
-            case R.id.menu_out_initialize_signal_handler:
-                error = NDCrash.initializeOutOfProcess(
-                        getApplicationContext(),
-                        MainApplication.getReportPath(),
-                        unwinder,
-                        CrashService.class);
-                message = "Out-of-process initialization result: " + error;
-                break;
-            case R.id.menu_out_deinitialize_signal_handler:
-                message = "Out-of-process de-initialization result: " + NDCrash.deInitializeOutOfProcess(this);
-                break;
-            case R.id.menu_out_start_service:
-            case R.id.menu_out_stop_service:
-            case R.id.menu_out_restart_service:
-                if (item.getItemId() != R.id.menu_out_start_service) {
-                    getApplicationContext().stopService(new Intent(getApplicationContext(), CrashService.class));
-                }
-                if (item.getItemId() != R.id.menu_out_stop_service) {
-                    final Intent serviceIntent = new Intent(getApplicationContext(), CrashService.class);
-                    serviceIntent.putExtra(CrashService.EXTRA_REPORT_FILE, MainApplication.getReportPath());
-                    serviceIntent.putExtra(CrashService.EXTRA_UNWINDER, unwinder.ordinal());
-                    getApplicationContext().startService(serviceIntent);
-                }
-                break;
+        final int itemId = item.getItemId();
+        if (itemId == R.id.menu_in_initialize_signal_handler) {
+            error = NDCrash.initializeInProcess(
+                    MainApplication.getReportPath(),
+                    unwinder);
+            message = "In-process initialization result: " + error;
+        } else if (itemId == R.id.menu_in_deinitialize_signal_handler) {
+            message = "Out-of-process de-initialization result: " + NDCrash.deInitializeInProcess();
+        } else if (itemId == R.id.menu_out_initialize_signal_handler) {
+            error = NDCrash.initializeOutOfProcess(
+                    getApplicationContext(),
+                    MainApplication.getReportPath(),
+                    unwinder,
+                    CrashService.class);
+            message = "Out-of-process initialization result: " + error;
+        } else if (itemId == R.id.menu_out_deinitialize_signal_handler) {
+            message = "Out-of-process de-initialization result: " + NDCrash.deInitializeOutOfProcess(this);
+        } else if (itemId == R.id.menu_out_start_service || itemId == R.id.menu_out_stop_service || itemId == R.id.menu_out_restart_service) {
+            // 这个代码块处理了之前 switch 中贯穿(fall-through)的多个 case
+            if (itemId != R.id.menu_out_start_service) {
+                getApplicationContext().stopService(new Intent(getApplicationContext(), CrashService.class));
+            }
+            if (itemId != R.id.menu_out_stop_service) {
+                final Intent serviceIntent = new Intent(getApplicationContext(), CrashService.class);
+                serviceIntent.putExtra(CrashService.EXTRA_REPORT_FILE, MainApplication.getReportPath());
+                serviceIntent.putExtra(CrashService.EXTRA_UNWINDER, unwinder.ordinal());
+                getApplicationContext().startService(serviceIntent);
+            }
         }
         if (message != null) {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
